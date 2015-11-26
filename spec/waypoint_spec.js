@@ -62,6 +62,7 @@ describe('<Waypoint>', function() {
     beforeEach(() => {
       this.topSpacerHeight = 90;
       this.bottomSpacerHeight = 200;
+      this.parentComponent = this.subject();
       this.scrollable = this.subject().getDOMNode();
     });
 
@@ -71,6 +72,17 @@ describe('<Waypoint>', function() {
 
     it('does not call the onLeave handler', () => {
       expect(this.props.onLeave).not.toHaveBeenCalled();
+    });
+
+    describe('when the waypoint is re-rendered', () => {
+      beforeEach(() => {
+        this.props.onEnter.calls.reset();
+        this.parentComponent.forceUpdate();
+      });
+
+      it('does not call the onEnter callback again', () => {
+        expect(this.props.onEnter).not.toHaveBeenCalled();
+      });
     });
 
     describe('when scrolling while the waypoint is visible', () => {
@@ -319,6 +331,24 @@ describe('<Waypoint>', function() {
       it('fires the onEnter handler', () => {
         expect(this.props.onEnter).toHaveBeenCalled();
       });
+    });
+  });
+
+  describe('when the <html> is the scrollable parent', () => {
+    beforeEach(() => {
+      // Give the <html> an overflow style
+      document.documentElement.style.overflow = 'auto';
+
+      // Make the normal parent non-scrollable
+      this.parentStyle = {};
+    });
+
+    afterEach(() => {
+      delete document.documentElement.style.overflow;
+    });
+
+    it('does not throw an error', () => {
+      expect(this.subject).not.toThrow();
     });
   });
 });
