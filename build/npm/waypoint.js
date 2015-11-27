@@ -101,21 +101,29 @@ var Waypoint = React.createClass({
    *   called by a React lifecyle method
    */
   _handleScroll: function _handleScroll(event) {
-    var currentPosition = this._currentPosition();
+    if (!this.isMounted()) {
+      return;
+    }
 
-    if (this._previousPosition === currentPosition) {
+    var currentPosition = this._currentPosition();
+    var previousPosition = this._previousPosition;
+
+    // Save previous position as early as possible to prevent cycles
+    this._previousPosition = currentPosition;
+
+    if (previousPosition === currentPosition) {
       // No change since last trigger
       return;
     }
 
     if (currentPosition === POSITIONS.inside) {
       this.props.onEnter.call(this, event);
-    } else if (this._previousPosition === POSITIONS.inside) {
+    } else if (previousPosition === POSITIONS.inside) {
       this.props.onLeave.call(this, event);
     }
 
-    var isRapidScrollDown = this._previousPosition === POSITIONS.below && currentPosition === POSITIONS.above;
-    var isRapidScrollUp = this._previousPosition === POSITIONS.above && currentPosition === POSITIONS.below;
+    var isRapidScrollDown = previousPosition === POSITIONS.below && currentPosition === POSITIONS.above;
+    var isRapidScrollUp = previousPosition === POSITIONS.above && currentPosition === POSITIONS.below;
     if (isRapidScrollDown || isRapidScrollUp) {
       // If the scroll event isn't fired often enough to occur while the
       // waypoint was visible, we trigger both callbacks anyway.
@@ -150,16 +158,17 @@ var Waypoint = React.createClass({
     var waypointTop = this._distanceToTopOfScrollableAncestor(React.findDOMNode(this));
     var contextHeight = undefined;
     var contextScrollTop = undefined;
+    var thresholdPx = undefined;
 
     if (this.scrollableAncestor === window) {
       contextHeight = window.innerHeight;
       contextScrollTop = window.pageYOffset;
+      thresholdPx = document.body.offsetHeight * this.props.threshold;
     } else {
       contextHeight = this.scrollableAncestor.offsetHeight;
       contextScrollTop = this.scrollableAncestor.scrollTop;
+      thresholdPx = contextHeight * this.props.threshold;
     }
-
-    var thresholdPx = contextHeight * this.props.threshold;
 
     var isBelowTop = contextScrollTop <= waypointTop + thresholdPx;
     if (!isBelowTop) {
