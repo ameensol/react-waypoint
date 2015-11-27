@@ -162,16 +162,17 @@ const Waypoint = React.createClass({
       this._distanceToTopOfScrollableAncestor(React.findDOMNode(this));
     let contextHeight;
     let contextScrollTop;
+    let thresholdPx;
 
     if (this.scrollableAncestor === window) {
       contextHeight = window.innerHeight;
       contextScrollTop = window.pageYOffset;
+      thresholdPx = document.body.offsetHeight * this.props.threshold;
     } else {
       contextHeight = this.scrollableAncestor.offsetHeight;
       contextScrollTop = this.scrollableAncestor.scrollTop;
+      thresholdPx = contextHeight * this.props.threshold;
     }
-
-    const thresholdPx = contextHeight * this.props.threshold;
 
     const isBelowTop = contextScrollTop <= waypointTop + thresholdPx;
     if (!isBelowTop) {
